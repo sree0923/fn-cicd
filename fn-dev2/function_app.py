@@ -3,8 +3,8 @@ import logging
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
-@app.route(route="http_trigger1")
-def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
+@app.route(route="http_trigger2")
+def http_trigger2(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     name = req.params.get('name')
@@ -20,6 +20,6 @@ def http_trigger1(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
     else:
         return func.HttpResponse(
-             "This HTTP triggered1 function with folder pick up",
+             "This HTTP triggered2 function executed with templates and folders",
              status_code=200
         )

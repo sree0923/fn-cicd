@@ -16,6 +16,9 @@ on:
         required: true
         default: "folder1,folder2" # Optional default value
 
+permissions:
+  contents: write
+  
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest

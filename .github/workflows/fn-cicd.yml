@@ -52,10 +52,4 @@ jobs:
           git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH"
           git push origin $TARGET_BRANCH
 
-      # Step 5: Deployment Step (Customize as per your environment)
-      - name: Deploy Changes
-        run: |
-          echo "Deploying changes from branch $TARGET_BRANCH"
-          # Example deployment command
-          # Replace with actual deployment logic (e.g., scripts, APIs)
-          ./deploy.sh $TARGET_BRANCH
+

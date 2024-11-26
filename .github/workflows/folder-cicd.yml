@@ -35,6 +35,11 @@ jobs:
           echo "SOURCE_BRANCH=${{ github.event.inputs.source_branch }}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_ENV
 
+      - name: Ensure Branches Exist
+        run: |
+         git fetch origin $SOURCE_BRANCH:$SOURCE_BRANCH
+         git fetch origin $TARGET_BRANCH:$TARGET_BRANCH          
+
       # Step 3: Switch to Target Branch
       - name: Switch to Target Branch
         run: |
@@ -46,10 +51,11 @@ jobs:
       - name: Copy Specific Folders
         run: |
           for folder in $FOLDERS; do
-            git checkout $SOURCE_BRANCH -- "$folder"
+            echo "Checking out $folder from $SOURCE_BRANCH..."
+            git checkout $SOURCE_BRANCH -- "$folder" || (echo "Error checking out $folder" && exit 1)
           done
           git add $FOLDERS
-          git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH"
+          git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH" || echo "No changes to commit"
           git push origin $TARGET_BRANCH
 
 

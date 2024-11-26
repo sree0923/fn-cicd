@@ -37,8 +37,8 @@ jobs:
 
       - name: Ensure Branches Exist
         run: |
-         git fetch origin $SOURCE_BRANCH:$SOURCE_BRANCH
-         git fetch origin $TARGET_BRANCH:$TARGET_BRANCH          
+         git fetch origin $SOURCE_BRANCH
+         git fetch origin $TARGET_BRANCH         
 
       # Step 3: Switch to Target Branch
       - name: Switch to Target Branch

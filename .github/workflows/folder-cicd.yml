@@ -38,7 +38,11 @@ jobs:
         run: |
          echo "Current branch:"
          git branch --show-current
-        
+      - name: Debug Remote Branches
+        run: |
+         echo "Remote branches:"
+         git branch -r
+               
       - name: Ensure Branches Exist
         run: |
          git fetch origin $SOURCE_BRANCH
@@ -56,7 +60,7 @@ jobs:
         run: |
           for folder in $FOLDERS; do
             echo "Checking out $folder from $SOURCE_BRANCH..."
-            git checkout $SOURCE_BRANCH -- "$folder" || (echo "Error checking out $folder" && exit 1)
+            git checkout origin/$SOURCE_BRANCH -- "$folder" || (echo "Error checking out $folder" && exit 1)
           done
           git add $FOLDERS
           git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH" || echo "No changes to commit"

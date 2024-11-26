@@ -1,0 +1,129 @@
+
+name: CICD for Azure Function App
+
+on:
+  push:
+    branches:
+      - "feature/**"
+      - develop
+      - qa
+      - main
+      - 'release/*'
+  pull_request:
+    branches:
+      - develop
+      - qa
+      - main
+      - 'release/*' 
+env:
+  PYTHON_VERSION: '3.9' 
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE20 : true
+
+jobs: 
+  generate-matrix:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Determine Environment
+        id: determine-env
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Determine the base branch of the PR
+            branch="${{ github.base_ref }}"
+            echo "Detected PR from branch: $branch"
+          else
+            # Use the branch from the push or other events
+            branch="${{ github.ref }}" 
+            branch="${branch#refs/heads/}"
+            echo "Detected branch: $branch"
+          fi
+      
+          # Map branch to environment
+          if [[ "$branch" == "develop" || "$branch" == feature/* ]]; then
+            echo "env=dev" >> $GITHUB_ENV
+          elif [[ "$branch" == "qa" ]]; then
+            echo "env=qa" >> $GITHUB_ENV
+          elif [[ "$branch" == release/* ]]; then
+            echo "env=staging" >> $GITHUB_ENV
+          elif [[ "$branch" == "main" ]]; then
+            echo "env=prod" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $branch; exiting."
+            exit 1
+          fi
+          
+      - name: Read JSON and Generate Matrix for ${{ env.env }}
+        id: set-matrix
+        run: |
+          MATRIX=$(jq -c ".${{ env.env }}" app.json)
+          echo "Generated MATRIX: $MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+    
+      - name: Log Generated Matrix
+        run: |
+          echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
+
+  deploy-dev:
+    uses: sree0923/function-cicd/.github/workflows/deploy-template.yml@develop  # Reference the reusable workflow at the job level
+    secrets:
+      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
+    needs: generate-matrix
+    if: github.ref == 'refs/heads/develop' 
+    strategy:
+      matrix:          
+       app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false   
+    with:
+      app-name: ${{ matrix.app.name }}
+      app-folder: ${{ matrix.app.folder }}
+      environment: develop
+     
+  deploy-qa:
+    uses: sree0923/function-cicd/.github/workflows/deploy-template.yml@develop  # Reference the reusable workflow at the job level
+    secrets:
+      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
+    needs: generate-matrix
+    if: github.ref == 'refs/heads/qa' 
+    strategy:
+      matrix:          
+        app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false    
+    with:
+      app-name: ${{ matrix.app.name }}
+      app-folder: ${{ matrix.app.folder }}
+      environment: qa
+
+  deploy-prod:
+    uses: sree0923/function-cicd/.github/workflows/deploy-template.yml@develop  # Reference the reusable workflow at the job level
+    secrets:
+      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
+    needs: generate-matrix
+    if: github.ref == 'refs/heads/main' 
+    strategy:
+      matrix:          
+        app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false    
+    with:
+      app-name: ${{ matrix.app.name }}
+      app-folder: ${{ matrix.app.folder }}
+      environment: prod
+            
+ 
+
+
+
+
+
+
+
+
+
+         
+
+
+

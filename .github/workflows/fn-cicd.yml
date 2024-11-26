@@ -1,0 +1,61 @@
+name: Sync Specific Folders and Deploy
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+    inputs:
+      source_branch:
+        description: "Source branch to sync from (e.g., develop, qa)"
+        required: true
+        default: "develop" # Optional default value
+      target_branch:
+        description: "Target branch to sync to (e.g., qa, main)"
+        required: true
+        default: "qa" # Optional default value
+      folders:
+        description: "Comma-separated list of folders to sync (e.g., folder1,folder2)"
+        required: true
+        default: "folder1,folder2" # Optional default value
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ensure all branches are fetched
+
+      # Step 2: Parse Inputs
+      - name: Parse Inputs
+        id: parse-inputs
+        run: |
+          echo "FOLDERS=$(echo '${{ github.event.inputs.folders }}' | tr ',' ' ')" >> $GITHUB_ENV
+          echo "SOURCE_BRANCH=${{ github.event.inputs.source_branch }}" >> $GITHUB_ENV
+          echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_ENV
+
+      # Step 3: Switch to Target Branch
+      - name: Switch to Target Branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout $TARGET_BRANCH
+
+      # Step 4: Copy Specific Folders from Source Branch
+      - name: Copy Specific Folders
+        run: |
+          for folder in $FOLDERS; do
+            git checkout $SOURCE_BRANCH -- "$folder"
+          done
+          git add $FOLDERS
+          git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH"
+          git push origin $TARGET_BRANCH
+
+      # Step 5: Deployment Step (Customize as per your environment)
+      - name: Deploy Changes
+        run: |
+          echo "Deploying changes from branch $TARGET_BRANCH"
+          # Example deployment command
+          # Replace with actual deployment logic (e.g., scripts, APIs)
+          ./deploy.sh $TARGET_BRANCH

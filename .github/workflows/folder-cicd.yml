@@ -16,6 +16,9 @@ on:
         required: true
         default: "folder1,folder2" # Optional default value
 
+permissions:
+  contents: write
+  
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Ensure all branches are fetched
 
@@ -34,6 +37,19 @@ jobs:
           echo "FOLDERS=$(echo '${{ github.event.inputs.folders }}' | tr ',' ' ')" >> $GITHUB_ENV
           echo "SOURCE_BRANCH=${{ github.event.inputs.source_branch }}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_ENV
+      - name: Debug Current Branch
+        run: |
+         echo "Current branch:"
+         git branch --show-current
+      - name: Debug Remote Branches
+        run: |
+         echo "Remote branches:"
+         git branch -r
+               
+      - name: Ensure Branches Exist
+        run: |
+         git fetch origin $SOURCE_BRANCH
+         git fetch origin $TARGET_BRANCH             
 
       # Step 3: Switch to Target Branch
       - name: Switch to Target Branch
@@ -46,10 +62,11 @@ jobs:
       - name: Copy Specific Folders
         run: |
           for folder in $FOLDERS; do
-            git checkout $SOURCE_BRANCH -- "$folder"
+            echo "Checking out $folder from $SOURCE_BRANCH..."
+            git checkout origin/$SOURCE_BRANCH -- "$folder" || (echo "Error checking out $folder" && exit 1)
           done
           git add $FOLDERS
-          git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH"
+          git commit -m "Sync $FOLDERS from $SOURCE_BRANCH to $TARGET_BRANCH" || echo "No changes to commit"
           git push origin $TARGET_BRANCH
 
 

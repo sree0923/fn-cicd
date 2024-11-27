@@ -43,7 +43,7 @@ jobs:
         if [ "${{ github.event.inputs.fn-dev1 }}" == "true" ]; then
           FOLDERS="$FOLDERS fn-dev1"
         fi
-        if [ "${{ github.event.inputs.fn-de2 }}" == "true" ]; then
+        if [ "${{ github.event.inputs.fn-dev2 }}" == "true" ]; then
           FOLDERS="$FOLDERS fn-dev2"
         fi
         echo "FOLDERS=$FOLDERS" >> $GITHUB_ENV

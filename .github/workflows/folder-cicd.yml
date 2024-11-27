@@ -63,7 +63,6 @@ jobs:
       - name: Parse Inputs
         id: parse-inputs
         run: |
-          # echo "FOLDERS=$(echo '${{ github.event.inputs.folders }}' | tr ',' ' ')" >> $GITHUB_ENV
           echo "SOURCE_BRANCH=${{ github.event.inputs.source_branch }}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_ENV
 

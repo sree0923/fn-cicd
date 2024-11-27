@@ -111,7 +111,7 @@ jobs:
       matrix:          
         app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
       fail-fast: false   
-    with:
+    with: 
       app-name: ${{ matrix.app.name }}
       app-folder: ${{ matrix.app.folder }}
       environment: ${{ github.event.inputs.branch }}

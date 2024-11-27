@@ -102,12 +102,11 @@ jobs:
        echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
 
   deploy-env:
-    if: github.event.inputs.branch == 'develop' || github.event.inputs.branch == 'qa' || github.event.inputs.branch == 'main'
-    uses: sree0923/fn-cicd/.github/workflows/deploy-template.yml@${{ github.event.inputs.branch }}
-    # uses: sree0923/fn-cicd/.github/workflows/deploy-template.yml@qa  # Reference the reusable workflow at the job level
+    uses: sree0923/fn-cicd/.github/workflows/deploy-template.yml@qa  # Reference the reusable workflow at the job level
     secrets:
       azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
     needs: generate-matrix
+    if: github.ref == 'refs/heads/${{ github.event.inputs.branch }}' 
     strategy:
       matrix:          
         app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}

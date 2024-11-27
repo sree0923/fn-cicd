@@ -49,7 +49,7 @@ jobs:
         SELECTED_FOLDERS=($FOLDERS)
         MATRIX="[]"
         JSON=$(cat app.json)
-
+    
         for folder in "${SELECTED_FOLDERS[@]}"; do
           ENTRY=$(echo "$JSON" | jq -c ".${{ env.env }}[] | select(.folder == \"$folder\")")
           if [[ ! -z "$ENTRY" ]]; then
@@ -58,7 +58,9 @@ jobs:
             echo "Folder $folder not found in environment ${{ env.env }}"
           fi
         done
-
+    
+        # Properly format the output as a single-line JSON string
+        MATRIX=$(echo "$MATRIX" | jq -c ".")
         echo "Generated MATRIX: $MATRIX"
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 

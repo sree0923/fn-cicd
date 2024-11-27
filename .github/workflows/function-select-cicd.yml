@@ -64,6 +64,10 @@ jobs:
         echo "Generated MATRIX: $MATRIX"
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
+    - name: Log Generated Matrix
+      run: |
+       echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
+
   deploy-dev:
     uses: sree0923/fn-cicd/.github/workflows/deploy-template.yml@qa  # Reference the reusable workflow at the job level
     secrets:

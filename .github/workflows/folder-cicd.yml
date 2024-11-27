@@ -70,6 +70,7 @@ jobs:
         run: |
          echo "Current branch:"
          git branch --show-current
+         
       - name: Debug Remote Branches
         run: |
          echo "Remote branches:"

@@ -62,15 +62,17 @@ jobs:
         echo "Generated MATRIX: $MATRIX"
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
-  deploy:
+  deploy-dev:
+    uses: sree0923/fn-cicd/.github/workflows/deploy-template.yml@qa  # Reference the reusable workflow at the job level
+    secrets:
+      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
     needs: generate-matrix
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/qa' 
     strategy:
-      matrix:
+      matrix:          
         app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-      fail-fast: false
-    steps:
-    - name: Deploy App
-      run: |
-        echo "Deploying ${matrix.app.name} from ${matrix.app.folder}"
-        # Add your deployment logic here
+      fail-fast: false   
+    with:
+      app-name: ${{ matrix.app.name }}
+      app-folder: ${{ matrix.app.folder }}
+      environment: qa

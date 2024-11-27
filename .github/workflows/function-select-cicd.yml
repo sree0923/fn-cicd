@@ -9,6 +9,12 @@ on:
       branch:
         description: "Target branch for deployment (e.g., develop, qa, main)"
         required: true
+        type: choice
+        options:
+          - develop
+          - qa
+          - release
+          - main
 
 jobs:
   generate-matrix:

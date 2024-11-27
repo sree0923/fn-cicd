@@ -2,19 +2,32 @@ name: Sync Specific Folders and Deploy
 
 on:
   workflow_dispatch: # Allows manual triggering of the workflow
-    inputs:
-      source_branch:
-        description: "Source branch to sync from (e.g., develop, qa)"
-        required: true
-        default: "develop" # Optional default value
-      target_branch:
-        description: "Target branch to sync to (e.g., qa, main)"
-        required: true
-        default: "qa" # Optional default value
-      folders:
-        description: "Comma-separated list of folders to sync (e.g., folder1,folder2)"
-        required: true
-        default: "folder1,folder2" # Optional default value
+      inputs:
+        # folders:
+        #   description: "Comma-separated list of folders to deploy"
+        #   required: true
+        fn-dev1:
+          description: "Deploy fn-dev1?"
+          required: false
+          default: false
+          type: boolean
+        fn-dev2:
+          description: "Deploy fn-dev2?"
+          required: false
+          default: false
+          type: boolean
+        source_branch:
+          description: "Source branch to sync from (e.g., develop, qa)"
+          required: true
+          default: "develop" # Optional default value
+        target_branch:
+          description: "Target branch to sync to (e.g., qa, main)"
+          required: true
+          default: "qa" # Optional default value
+      # folders:
+      #   description: "Comma-separated list of folders to sync (e.g., folder1,folder2)"
+      #   required: true
+      #   default: "folder1,folder2" # Optional default value
 
 permissions:
   contents: write
@@ -30,17 +43,34 @@ jobs:
         with:
           fetch-depth: 0 # Ensure all branches are fetched
 
+      - name: Determine Selected Folders
+        id: select-folders
+        run: |
+          FOLDERS=""
+          if [ "${{ github.event.inputs.fn-dev1 }}" == "true" ]; then
+            FOLDERS="$FOLDERS fn-dev1"
+          fi
+          if [ "${{ github.event.inputs.fn-de2 }}" == "true" ]; then
+            FOLDERS="$FOLDERS fn-dev2"
+          fi
+          echo "FOLDERS=$FOLDERS" >> $GITHUB_ENV
+
+      - name: Use Selected Folders
+        run: |
+          echo "Selected folders: $FOLDERS" 
+
       # Step 2: Parse Inputs
       - name: Parse Inputs
         id: parse-inputs
         run: |
-          echo "FOLDERS=$(echo '${{ github.event.inputs.folders }}' | tr ',' ' ')" >> $GITHUB_ENV
           echo "SOURCE_BRANCH=${{ github.event.inputs.source_branch }}" >> $GITHUB_ENV
           echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_ENV
+
       - name: Debug Current Branch
         run: |
          echo "Current branch:"
          git branch --show-current
+         
       - name: Debug Remote Branches
         run: |
          echo "Remote branches:"

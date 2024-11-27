@@ -1,0 +1,76 @@
+name: CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      folders:
+        description: "Comma-separated list of folders to deploy"
+        required: true
+      branch:
+        description: "Target branch for deployment (e.g., develop, qa, main)"
+        required: true
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Parse Selected Folders
+      id: parse-folders
+      run: |
+        echo "FOLDERS=$(echo '${{ github.event.inputs.folders }}' | tr ',' ' ')" >> $GITHUB_ENV
+
+    - name: Set Environment from User Input Branch
+      id: set-env
+      run: |
+        branch="${{ github.event.inputs.branch }}"
+        echo "Target branch: $branch"
+
+        if [[ "$branch" == "develop" || "$branch" == feature/* ]]; then
+          echo "env=dev" >> $GITHUB_ENV
+        elif [[ "$branch" == "qa" ]]; then
+          echo "env=qa" >> $GITHUB_ENV
+        elif [[ "$branch" == release/* ]]; then
+          echo "env=staging" >> $GITHUB_ENV
+        elif [[ "$branch" == "main" ]]; then
+          echo "env=prod" >> $GITHUB_ENV
+        else
+          echo "Unknown branch: $branch; exiting."
+          exit 1
+        fi
+
+    - name: Generate Matrix for Selected Folders
+      id: set-matrix
+      run: |
+        SELECTED_FOLDERS=($FOLDERS)
+        MATRIX="[]"
+        JSON=$(cat app.json)
+
+        for folder in "${SELECTED_FOLDERS[@]}"; do
+          ENTRY=$(echo "$JSON" | jq -c ".${{ env.env }}[] | select(.folder == \"$folder\")")
+          if [[ ! -z "$ENTRY" ]]; then
+            MATRIX=$(echo "$MATRIX" | jq ". + [$ENTRY]")
+          else
+            echo "Folder $folder not found in environment ${{ env.env }}"
+          fi
+        done
+
+        echo "Generated MATRIX: $MATRIX"
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
+    steps:
+    - name: Deploy App
+      run: |
+        echo "Deploying ${matrix.app.name} from ${matrix.app.folder}"
+        # Add your deployment logic here

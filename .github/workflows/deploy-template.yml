@@ -98,7 +98,7 @@ jobs:
     - name: Login to Azure
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: ${{ secrets.azure-credentials}}
 
     - name: Swap red Slot with Production
       # uses: azure/azure-cli-action@v1

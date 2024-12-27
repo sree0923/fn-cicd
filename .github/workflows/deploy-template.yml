@@ -86,9 +86,10 @@ jobs:
   manual_approval:
     needs: deploy-template
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
-    - name: Await Manual Approval
-      run: echo "Waiting for manual approval before swapping slots. Approve this step in the Actions tab."
+    - name: Awaiting Manual Approval
+      run: echo "Awaiting approval to proceed with swapping slots."
 
   swap:
     needs: manual_approval
@@ -100,9 +101,10 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Swap red Slot with Production
-      uses: azure/azure-cli-action@v1
-      with:
-        inlineScript: |
+      # uses: azure/azure-cli-action@v1
+      # with:
+      #   inlineScript: |
+      run: |
           az functionapp deployment slot swap \
             --name ${{ inputs.app-name }} \
             # --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \

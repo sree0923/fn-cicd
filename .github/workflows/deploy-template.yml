@@ -103,7 +103,11 @@ jobs:
       run: |
        # Extract or construct the resource group name
        RESOURCE_GROUP="${{ inputs.app-name }}.resource group"
-       echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV    
+        echo "RESOURCE_GROUP=\"${RESOURCE_GROUP}\"" >> $GITHUB_ENV   
+    - name: Debug Variables
+      run: |
+        echo "App Name: ${{ inputs.app-name }}"
+        echo "Resource Group: $RESOURCE_GROUP"
 
     - name: Swap red Slot with Production
       # uses: azure/azure-cli-action@v1

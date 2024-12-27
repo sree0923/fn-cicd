@@ -19,7 +19,9 @@ on:
   secrets:
     azure-credentials:
         required: true
-        
+env:
+  AZURE_SLOT_RED: red  
+  
 jobs:
   deploy-template:
     runs-on: ubuntu-latest
@@ -64,13 +66,45 @@ jobs:
           # if: env.deploy == 'true'
           uses: azure/login@v1
           with:
-            creds: ${{ secrets.azure-credentials}}         
-  
-        - name: Deploy to Azure Function App
-          # if: env.deploy == 'true'
+            creds: ${{ secrets.azure-credentials}}
+
+        - name: Deploy to red Slot
           uses: azure/functions-action@v1
           with:
-            app-name: ${{ inputs.app-name }}
-            package: ./${{ inputs.app-folder }}
-            scm-do-build-during-deployment: true
-            enable-oryx-build: true    
+           app-name: ${{ inputs.app-name }}
+           slot-name: ${{ env.AZURE_SLOT_RED }}
+           package: ./${{ inputs.app-folder }}  
+  
+        # - name: Deploy to Azure Function App
+        #   # if: env.deploy == 'true'
+        #   uses: azure/functions-action@v1
+        #   with:
+        #     app-name: ${{ inputs.app-name }}
+        #     package: ./${{ inputs.app-folder }}
+        #     scm-do-build-during-deployment: true
+        #     enable-oryx-build: true
+  manual_approval:
+    needs: deploy-template
+    runs-on: ubuntu-latest
+    steps:
+    - name: Await Manual Approval
+      run: echo "Waiting for manual approval before swapping slots. Approve this step in the Actions tab."
+
+  swap:
+    needs: manual_approval
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Swap red Slot with Production
+      uses: azure/azure-cli-action@v1
+      with:
+        inlineScript: |
+          az functionapp deployment slot swap \
+            --name ${{ inputs.app-name }} \
+            # --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --slot ${{ env.AZURE_SLOT_RED }}
+        

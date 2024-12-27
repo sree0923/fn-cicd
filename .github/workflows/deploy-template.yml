@@ -102,8 +102,8 @@ jobs:
     - name: Set Resource Group Name
       run: |
        # Extract or construct the resource group name
-       RESOURCE_GROUP="${{ inputs.app-name }}.resource group"
-        echo "RESOURCE_GROUP=\"${RESOURCE_GROUP}\"" >> $GITHUB_ENV   
+       RESOURCE_GROUP=$(az functionapp list --query "[?name=='fn-cicd-dev1'].{ResourceGroup:resourceGroup}" -o tsv)
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV   
     - name: Debug Variables
       run: |
         echo "App Name: ${{ inputs.app-name }}"

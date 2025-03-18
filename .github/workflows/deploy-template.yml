@@ -68,54 +68,54 @@ jobs:
           with:
             creds: ${{ secrets.azure-credentials}}
 
-        - name: Deploy to red Slot
-          uses: azure/functions-action@v1
-          with:
-           app-name: ${{ inputs.app-name }}
-           slot-name: ${{ env.AZURE_SLOT_RED }}
-           package: ./${{ inputs.app-folder }}  
-  
-        # - name: Deploy to Azure Function App
-        #   # if: env.deploy == 'true'
+        # - name: Deploy to red Slot
         #   uses: azure/functions-action@v1
         #   with:
-        #     app-name: ${{ inputs.app-name }}
-        #     package: ./${{ inputs.app-folder }}
-        #     scm-do-build-during-deployment: true
-        #     enable-oryx-build: true
-  manual_approval:
-    needs: deploy-template
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-    - name: Awaiting Manual Approval
-      run: echo "Awaiting approval to proceed with swapping slots."
+        #    app-name: ${{ inputs.app-name }}
+        #    slot-name: ${{ env.AZURE_SLOT_RED }}
+        #    package: ./${{ inputs.app-folder }}  
+  
+        - name: Deploy to Azure Function App
+          # if: env.deploy == 'true'
+          uses: azure/functions-action@v1
+          with:
+            app-name: ${{ inputs.app-name }}
+            package: ./${{ inputs.app-folder }}
+            scm-do-build-during-deployment: true
+            enable-oryx-build: true
+  # manual_approval:
+  #   needs: deploy-template
+  #   runs-on: ubuntu-latest
+  #   environment: ${{ inputs.environment }}
+  #   steps:
+  #   - name: Awaiting Manual Approval
+  #     run: echo "Awaiting approval to proceed with swapping slots."
 
-  swap:
-    needs: manual_approval
-    runs-on: ubuntu-latest
-    steps:
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.azure-credentials}}
-    - name: Set Resource Group Name
-      run: |
-       # Extract or construct the resource group name
-       RESOURCE_GROUP=$(az functionapp list --query "[?name=='fn-cicd-dev1'].{ResourceGroup:resourceGroup}" -o tsv)
-        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV   
-    - name: Debug Variables
-      run: |
-        echo "App Name: ${{ inputs.app-name }}"
-        echo "Resource Group: $RESOURCE_GROUP"
+  # swap:
+  #   needs: manual_approval
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Login to Azure
+  #     uses: azure/login@v1
+  #     with:
+  #       creds: ${{ secrets.azure-credentials}}
+  #   - name: Set Resource Group Name
+  #     run: |
+  #      # Extract or construct the resource group name
+  #      RESOURCE_GROUP=$(az functionapp list --query "[?name=='fn-cicd-dev1'].{ResourceGroup:resourceGroup}" -o tsv)
+  #       echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV   
+  #   - name: Debug Variables
+  #     run: |
+  #       echo "App Name: ${{ inputs.app-name }}"
+  #       echo "Resource Group: $RESOURCE_GROUP"
 
-    - name: Swap red Slot with Production
-      # uses: azure/azure-cli-action@v1
-      # with:
-      #   inlineScript: |
-      run: |
-          az functionapp deployment slot swap \
-            --name ${{ inputs.app-name }} \
-            --resource-group $RESOURCE_GROUP \
-            --slot ${{ env.AZURE_SLOT_RED }}
+  #   - name: Swap red Slot with Production
+  #     # uses: azure/azure-cli-action@v1
+  #     # with:
+  #     #   inlineScript: |
+  #     run: |
+  #         az functionapp deployment slot swap \
+  #           --name ${{ inputs.app-name }} \
+  #           --resource-group $RESOURCE_GROUP \
+  #           --slot ${{ env.AZURE_SLOT_RED }}
         
